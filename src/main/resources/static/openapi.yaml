@@ -1,0 +1,811 @@
+openapi: 3.0.1
+info:
+  title: Booking Platform API
+  description: API for managing catalog items in the Booking Platform
+  contact:
+    name: Jade Platform Team
+    email: support@jade-platform.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  version: 1.0.0
+servers:
+  - url: /
+    description: Default Server URL
+tags:
+  - name: catalog
+    description: Catalog management operations
+paths:
+  /api/v1/catalogs/legacy:
+    post:
+      tags:
+        - catalog
+      summary: Create a new catalog item (deprecated)
+      description: This endpoint is deprecated. Use the new endpoint that accepts CreateCatalogDto instead.
+      operationId: createCatalogLegacy
+      deprecated: true
+      requestBody:
+        description: Catalog item to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogDTO'
+        required: true
+      responses:
+        201:
+          description: Catalog item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDTO'
+  /api/v1/catalogs/batch/legacy:
+    post:
+      tags:
+        - catalog
+      summary: Create multiple catalog items (deprecated)
+      description: This endpoint is deprecated. Use the new endpoint that accepts CreateCatalogDto instead.
+      operationId: createCatalogsBatchLegacy
+      deprecated: true
+      requestBody:
+        description: List of catalog items to create
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogDTO'
+        required: true
+      responses:
+        201:
+          description: Catalog items created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+  /api/v1/catalogs:
+    get:
+      tags:
+        - catalog
+      summary: Get all catalogs
+      description: Retrieves all catalog items with pagination support
+      operationId: getAllCatalogs
+      parameters:
+        - name: page
+          in: query
+          description: Page number (zero-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            default: createdOn
+        - name: direction
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            default: DESC
+            enum:
+              - ASC
+              - DESC
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+    post:
+      tags:
+        - catalog
+      summary: Create a new catalog item
+      description: Creates a new catalog item with the provided data. System fields (publicId, createdOn, updatedOn) are automatically generated.
+      operationId: createCatalog
+      requestBody:
+        description: Catalog item to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCatalogDto'
+        required: true
+      responses:
+        201:
+          description: Catalog item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDTO'
+        400:
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/catalogs/batch:
+    post:
+      tags:
+        - catalog
+      summary: Create multiple catalog items
+      description: Creates multiple catalog items in a batch operation. System fields (publicId, createdOn, updatedOn) are automatically generated.
+      operationId: createCatalogsBatch
+      requestBody:
+        description: List of catalog items to create
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateCatalogDto'
+        required: true
+      responses:
+        201:
+          description: Catalog items created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+        400:
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    put:
+      tags:
+        - catalog
+      summary: Update multiple catalog items
+      description: Updates multiple catalog items in a batch operation
+      operationId: updateCatalogsBatch
+      requestBody:
+        description: List of catalog items to update
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogDTO'
+        required: true
+      responses:
+        200:
+          description: Catalog items updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+        400:
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        404:
+          description: Catalog item not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    delete:
+      tags:
+        - catalog
+      summary: Delete multiple catalog items
+      description: Deletes multiple catalog items in a batch operation
+      operationId: deleteCatalogsBatch
+      requestBody:
+        description: List of catalog item IDs to delete
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+                format: uuid
+        required: true
+      responses:
+        204:
+          description: Catalog items deleted
+        404:
+          description: Catalog item not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/catalogs/{id}:
+    get:
+      tags:
+        - catalog
+      summary: Get catalog by ID
+      description: Retrieves a catalog item by its ID
+      operationId: getCatalogById
+      parameters:
+        - name: id
+          in: path
+          description: Catalog item ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDTO'
+        404:
+          description: Catalog item not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    put:
+      tags:
+        - catalog
+      summary: Update catalog
+      description: Updates an existing catalog item
+      operationId: updateCatalog
+      parameters:
+        - name: id
+          in: path
+          description: Catalog item ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Updated catalog item
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogDTO'
+        required: true
+      responses:
+        200:
+          description: Catalog item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogDTO'
+        400:
+          description: Invalid input
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        404:
+          description: Catalog item not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+    delete:
+      tags:
+        - catalog
+      summary: Delete catalog
+      description: Deletes a catalog item
+      operationId: deleteCatalog
+      parameters:
+        - name: id
+          in: path
+          description: Catalog item ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Catalog item deleted
+        404:
+          description: Catalog item not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/v1/catalogs/title/{title}:
+    get:
+      tags:
+        - catalog
+      summary: Get catalogs by title
+      description: Retrieves catalog items by title
+      operationId: getCatalogsByTitle
+      parameters:
+        - name: title
+          in: path
+          description: Catalog item title
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+  /api/v1/catalogs/industry/{industryId}:
+    get:
+      tags:
+        - catalog
+      summary: Get catalogs by industry ID
+      description: Retrieves catalog items by industry ID
+      operationId: getCatalogsByIndustryId
+      parameters:
+        - name: industryId
+          in: path
+          description: Industry ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+  /api/v1/catalogs/filter:
+    get:
+      tags:
+        - catalog
+      summary: Filter catalogs
+      description: Filters catalog items based on various criteria
+      operationId: filterCatalogs
+      parameters:
+        - name: title
+          in: query
+          description: Catalog item title
+          required: false
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Catalog item description
+          required: false
+          schema:
+            type: string
+        - name: industryId
+          in: query
+          description: Industry ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: industryName
+          in: query
+          description: Industry name
+          required: false
+          schema:
+            type: string
+        - name: categories
+          in: query
+          description: Categories
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: tags
+          in: query
+          description: Tags
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: minPrice
+          in: query
+          description: Minimum price
+          required: false
+          schema:
+            type: number
+            format: decimal
+        - name: maxPrice
+          in: query
+          description: Maximum price
+          required: false
+          schema:
+            type: number
+            format: decimal
+        - name: merchantId
+          in: query
+          description: Merchant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: minRating
+          in: query
+          description: Minimum rating
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: maxRating
+          in: query
+          description: Maximum rating
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: complianceStatus
+          in: query
+          description: Compliance status
+          required: false
+          schema:
+            $ref: '#/components/schemas/ComplianceStatus'
+        - name: availabilityStatus
+          in: query
+          description: Availability status
+          required: false
+          schema:
+            $ref: '#/components/schemas/AvailabilityStatus'
+        - name: page
+          in: query
+          description: Page number (zero-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            default: createdOn
+        - name: direction
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            default: DESC
+            enum:
+              - ASC
+              - DESC
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogDTO'
+  /api/v1/catalogs/filter/paged:
+    get:
+      tags:
+        - catalog
+      summary: Filter catalogs with pagination
+      description: Filters catalog items based on various criteria with pagination support
+      operationId: filterCatalogsPaged
+      parameters:
+        - name: title
+          in: query
+          description: Catalog item title
+          required: false
+          schema:
+            type: string
+        - name: description
+          in: query
+          description: Catalog item description
+          required: false
+          schema:
+            type: string
+        - name: industryId
+          in: query
+          description: Industry ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: industryName
+          in: query
+          description: Industry name
+          required: false
+          schema:
+            type: string
+        - name: categories
+          in: query
+          description: Categories
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: tags
+          in: query
+          description: Tags
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: minPrice
+          in: query
+          description: Minimum price
+          required: false
+          schema:
+            type: number
+            format: decimal
+        - name: maxPrice
+          in: query
+          description: Maximum price
+          required: false
+          schema:
+            type: number
+            format: decimal
+        - name: merchantId
+          in: query
+          description: Merchant ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: minRating
+          in: query
+          description: Minimum rating
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: maxRating
+          in: query
+          description: Maximum rating
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: complianceStatus
+          in: query
+          description: Compliance status
+          required: false
+          schema:
+            $ref: '#/components/schemas/ComplianceStatus'
+        - name: availabilityStatus
+          in: query
+          description: Availability status
+          required: false
+          schema:
+            $ref: '#/components/schemas/AvailabilityStatus'
+        - name: page
+          in: query
+          description: Page number (zero-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          description: Sort field
+          required: false
+          schema:
+            type: string
+            default: createdOn
+        - name: direction
+          in: query
+          description: Sort direction
+          required: false
+          schema:
+            type: string
+            default: DESC
+            enum:
+              - ASC
+              - DESC
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponse'
+components:
+  schemas:
+    CreateCatalogDto:
+      type: object
+      required:
+        - title
+        - description
+        - industryId
+        - industryName
+        - categories
+        - tags
+        - price
+        - merchantId
+        - complianceStatus
+        - availabilityStatus
+      properties:
+        title:
+          type: string
+          description: Title of the catalog item
+          minLength: 3
+          maxLength: 255
+        description:
+          type: string
+          description: Description of the catalog item
+          minLength: 10
+          maxLength: 4000
+        industryId:
+          type: string
+          format: uuid
+          description: Industry ID
+        industryName:
+          type: string
+          description: Industry name
+        categories:
+          type: array
+          description: List of categories
+          items:
+            type: string
+        tags:
+          type: array
+          description: List of tags
+          items:
+            type: string
+        price:
+          type: number
+          format: decimal
+          description: Price of the catalog item
+          minimum: 0
+        merchantId:
+          type: string
+          format: uuid
+          description: Merchant ID
+        rating:
+          type: number
+          format: double
+          description: Rating of the catalog item
+          minimum: 0
+          maximum: 5
+        complianceStatus:
+          $ref: '#/components/schemas/ComplianceStatus'
+        availabilityStatus:
+          $ref: '#/components/schemas/AvailabilityStatus'
+    CatalogDTO:
+      type: object
+      required:
+        - title
+        - description
+        - price
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the catalog item
+        title:
+          type: string
+          description: Title of the catalog item
+        description:
+          type: string
+          description: Description of the catalog item
+        industryId:
+          type: string
+          format: uuid
+          description: Industry ID
+        industryName:
+          type: string
+          description: Industry name
+        categories:
+          type: array
+          items:
+            type: string
+          description: Categories
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags
+        price:
+          type: number
+          format: decimal
+          description: Price of the catalog item
+        merchantId:
+          type: string
+          format: uuid
+          description: Merchant ID
+        rating:
+          type: number
+          format: double
+          description: Rating of the catalog item
+        complianceStatus:
+          $ref: '#/components/schemas/ComplianceStatus'
+        availabilityStatus:
+          $ref: '#/components/schemas/AvailabilityStatus'
+        createdOn:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+    ComplianceStatus:
+      type: string
+      enum:
+        - COMPLIANT
+        - NON_COMPLIANT
+      description: Compliance status of the catalog item
+    AvailabilityStatus:
+      type: string
+      enum:
+        - AVAILABLE
+        - UNAVAILABLE
+      description: Availability status of the catalog item
+    PageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogDTO'
+          description: Page content
+        page:
+          type: integer
+          description: Current page number
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem type
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence of the problem
+        instance:
+          type: string
+          description: URI reference that identifies the specific occurrence of the problem

@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: booking-platform
+  profiles:
+    active: dev
+  r2dbc:
+    url: r2dbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/booking_platform
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    pool:
+      initial-size: 5
+      max-size: ${booking.platform.database.max-pool-size}
+      max-idle-time: 30m
+      validation-query: SELECT 1
+      max-create-connection-time: 10s
+      max-acquire-time: 5s
+      max-life-time: 1h
+  liquibase:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/booking_platform
+    user: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  jpa:
+    open-in-view: false
+
+
+server:
+  port: 9000
+  error:
+    include-message: always
+    include-binding-errors: always
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,cacheMetrics,connectionPoolMetrics
+  endpoint:
+    health:
+      show-details: when_authorized
+    cacheMetrics:
+      enabled: true
+    connectionPoolMetrics:
+      enabled: true
+
+booking:
+  platform:
+    database:
+      schema: public
+      max-pool-size: 10
+    security:
+      api-key: ${API_KEY:default-api-key}
+      token-expiry-seconds: 3600

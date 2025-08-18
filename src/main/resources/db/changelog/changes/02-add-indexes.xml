@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="02" author="booking-platform">
+        <comment>Add indexes to catalog table for improved query performance</comment>
+        
+        <!-- Index for title searches (prefix search optimization) -->
+        <createIndex indexName="idx_catalog_title" tableName="catalog">
+            <column name="title"/>
+        </createIndex>
+        
+        <!-- Index for industry_id searches (exact match) -->
+        <createIndex indexName="idx_catalog_industry_id" tableName="catalog">
+            <column name="industry_id"/>
+        </createIndex>
+        
+        <!-- Index for industry_name searches (prefix search) -->
+        <createIndex indexName="idx_catalog_industry_name" tableName="catalog">
+            <column name="industry_name"/>
+        </createIndex>
+        
+        <!-- Index for merchant_id searches (exact match) -->
+        <createIndex indexName="idx_catalog_merchant_id" tableName="catalog">
+            <column name="merchant_id"/>
+        </createIndex>
+        
+        <!-- Index for price range queries -->
+        <createIndex indexName="idx_catalog_price" tableName="catalog">
+            <column name="price"/>
+        </createIndex>
+        
+        <!-- Index for rating range queries -->
+        <createIndex indexName="idx_catalog_rating" tableName="catalog">
+            <column name="rating"/>
+        </createIndex>
+        
+        <!-- Indexes for status fields (low cardinality, but frequently used in filters) -->
+        <createIndex indexName="idx_catalog_compliance_status" tableName="catalog">
+            <column name="compliance_status"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_catalog_availability_status" tableName="catalog">
+            <column name="availability_status"/>
+        </createIndex>
+        
+        <!-- Composite index for common filter combinations -->
+        <createIndex indexName="idx_catalog_industry_status" tableName="catalog">
+            <column name="industry_id"/>
+            <column name="compliance_status"/>
+            <column name="availability_status"/>
+        </createIndex>
+        
+        <!-- GIN index for array fields (categories and tags) -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_catalog_categories_gin ON catalog USING gin(categories);
+            CREATE INDEX IF NOT EXISTS idx_catalog_tags_gin ON catalog USING gin(tags);
+        </sql>
+        
+        <!-- Full-text search index for description -->
+        <sql>
+            -- Create a tsvector column for full-text search
+            ALTER TABLE catalog ADD COLUMN IF NOT EXISTS description_tsv tsvector;
+            
+            -- Create an index on the tsvector column
+            CREATE INDEX IF NOT EXISTS idx_catalog_description_tsv ON catalog USING gin(description_tsv);
+            
+            -- Create a trigger to update the tsvector column when the description changes
+            CREATE OR REPLACE FUNCTION catalog_description_trigger() RETURNS trigger AS $$
+            BEGIN
+                NEW.description_tsv := to_tsvector('english', NEW.description);
+                RETURN NEW;
+            END
+            $$ LANGUAGE plpgsql;
+            
+            DROP TRIGGER IF EXISTS trig_catalog_description_update ON catalog;
+            
+            CREATE TRIGGER trig_catalog_description_update
+            BEFORE INSERT OR UPDATE OF description ON catalog
+            FOR EACH ROW
+            EXECUTE FUNCTION catalog_description_trigger();
+            
+            -- Update existing rows
+            UPDATE catalog SET description_tsv = to_tsvector('english', description);
+        </sql>
+    </changeSet>
+</databaseChangeLog>

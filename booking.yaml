@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: booking-platform
+  labels:
+    app: booking-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: booking-platform
+  template:
+    metadata:
+      labels:
+        app: booking-platform
+    spec:
+      containers:
+      - name: booking-platform
+        image: josleke/booking_platform:latest
+        ports:
+        - containerPort: 9000
+          name: http
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: DB_HOST
+          value: "postgres-service"  # Should match your database service name
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: booking-platform-secrets
+              key: db-username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: booking-platform-secrets
+              key: db-password
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-platform-service
+  labels:
+    app: booking-platform
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9000
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  selector:
+    app: booking-platform
+---
+# Example Secret (in a real environment, manage this separately)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: booking-platform-secrets
+type: Opaque
+data:
+  db-username: cG9zdGdyZXM=  # base64 encoded "postgres"
+  db-password: cG9zdGdyZXM=  # base64 encoded "postgres"

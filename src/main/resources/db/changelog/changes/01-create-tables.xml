@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="01" author="booking-platform">
+        <comment>Create catalog table</comment>
+        <createTable tableName="catalog">
+            <column name="id" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="public_id" type="uuid">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="decimal(3,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="industry_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="industry_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="merchant_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+            <column name="categories" type="text[]">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tags" type="text[]">
+                <constraints nullable="true"/>
+            </column>
+            <column name="compliance_status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="availability_status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_on" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_on" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>
